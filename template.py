@@ -35,13 +35,19 @@ class AmbienteDiezMil:
             tuple[int, bool]: Una recompensa y un flag que indica si terminó el turno. 
         """
         if accion == JUGADA_PLANTARSE:
-            self.turno_terminado = True
+            # self.turno_terminado = True
+            self.dados = np.random.randint(1,7,size=6) # PREG
             
         elif accion == JUGADA_TIRAR:
             resultado = puntaje_y_no_usados(self.dados)
-            self.puntaje_acumulado += resultado.first
-            self.dados = resultado.second
-            self.turno_terminado = False
+            if resultado.first == 0: # si en esa jugada no se suma nada
+                self.puntaje_acumulado = 0
+                self.dados = np.random.randint(1,7,size=6)
+            else:
+                self.puntaje_acumulado += resultado.first
+                self.dados = resultado.second
+
+            self.turno_terminado = False # PREG
         
         elif self.puntaje_acumulado >= 10000:
             self.turno_terminado = True
@@ -50,13 +56,15 @@ class AmbienteDiezMil:
         return (self.recompensa, self.turno_terminado)
 
 
-
 class EstadoDiezMil:
-    def __init__(self, dados, puntaje_acumulado):
+    def __init__(self, dados, puntaje_acumulado, turno_terminado):
         """Definir qué hace a un estado de diez mil.
         Recordar que la complejidad del estado repercute en la complejidad de la tabla del agente de q-learning.
         """
-        pass 
+        self.dados = dados
+        self.puntaje_acumulado = puntaje_acumulado
+        self.turno_terminado = turno_terminado
+        
 
     def actualizar_estado(self, *args, **kwargs) -> None:
         """Modifica las variables internas del estado luego de una tirada.
@@ -65,12 +73,14 @@ class EstadoDiezMil:
             ... (_type_): _description_
             ... (_type_): _description_
         """
-        pass
+        self.dados = kwargs.get('dados', self.dados)
+        self.puntaje_acumulado = kwargs.get('puntaje_acumulado', self.puntaje_acumulado)
+        self.turno_terminado = kwargs.get('turno_terminado', self.turno_terminado)
     
-    def fin_turno(self):
+    def fin_turno(self):  # PREG
         """Modifica el estado al terminar el turno.
         """
-        pass
+        self.turno_terminado = True
 
     def __str__(self):
         """Representación en texto de EstadoDiezMil.
