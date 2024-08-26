@@ -10,16 +10,21 @@ class AmbienteDiezMil:
         """Definir las variables de instancia de un ambiente.
         ¿Qué es propio de un ambiente de 10.000?
         """
-        self.puntaje_acumulado = 0
-        self.dados = np.random.randint(1,7,size=6)  # se inicializa con una primera tirada
+        self.puntaje_total = 0
+        self.puntaje_turno = 0
+        self.cant_turnos = 0
+        self.dados = [1, 2, 3, 4, 5, 6]  
         self.turno_terminado = False
         self.recompensa = 0
+
 
     def reset(self):
         """Reinicia el ambiente para volver a realizar un episodio.
         """
-        self.puntaje_acumulado = 0
-        self.dados = np.random.randint(1,7,size=6) 
+        self.puntaje_total = 0
+        self.puntaje_turno = 0
+        self.cant_turnos = 0
+        self.dados = [1, 2, 3, 4, 5, 6]  
         self.turno_terminado = False
         self.recompensa = 0
 
@@ -34,25 +39,43 @@ class AmbienteDiezMil:
         Returns:
             tuple[int, bool]: Una recompensa y un flag que indica si terminó el turno. 
         """
-        if accion == JUGADA_PLANTARSE:
-            # self.turno_terminado = True
-            self.dados = np.random.randint(1,7,size=6) # PREG
+        resultado = puntaje_y_no_usados(self.dados)
+
+        if accion == JUGADA_PLANTARSE: 
+            self.turno_terminado = True
+            self.dados = [1, 2, 3, 4, 5, 6] # vuelve a tener todos los dados 
+            self.puntaje_total += self.puntaje_turno # sumamos el puntaje del turno cuando decide plantarse
+            # self.recompensa = self.puntaje_turno / 10000  # recompensa proporcional al puntaje acumulado o 0??
+            self.puntaje_turno = 0
             
         elif accion == JUGADA_TIRAR:
-            resultado = puntaje_y_no_usados(self.dados)
+            
             if resultado.first == 0: # si en esa jugada no se suma nada
-                self.puntaje_acumulado = 0
-                self.dados = np.random.randint(1,7,size=6)
-            else:
-                self.puntaje_acumulado += resultado.first
-                self.dados = resultado.second
+                self.puntaje_turno = 0
+                self.dados = [1, 2, 3, 4, 5, 6]
+                self.turno_terminado = True
+                # penalizacion en la recompensa??
 
-            self.turno_terminado = False # PREG
-        
-        elif self.puntaje_acumulado >= 10000:
+            else:
+                self.puntaje_turno += resultado.first
+                self.dados = resultado.second
+                self.puntaje_acumulado += self.puntaje_turno
+                self.turno_terminado = False 
+                # recompensa por buena tirada????
+
+                if len(self.dados) == 0:  # si usó todos los dados, puede volver a tirar todos
+                    self.dados = [1, 2, 3, 4, 5, 6]
+
+        self.cant_turnos += 1 # aumentamos la cantidad de turnos
+
+        if self.cant_turnos == 10000:
             self.turno_terminado = True
-            self.recompensa = 1
-        
+            # penalización en la recompensa por no haber alcanzado los 10000 puntos dentro del límite de turnos??
+
+        if self.puntaje_total >= 10000:  # condición de que ganó
+            self.turno_terminado = True
+            self.recompensa = 1  # recompensa 1 o 10000?
+
         return (self.recompensa, self.turno_terminado)
 
 
@@ -61,21 +84,21 @@ class EstadoDiezMil:
         """Definir qué hace a un estado de diez mil.
         Recordar que la complejidad del estado repercute en la complejidad de la tabla del agente de q-learning.
         """
-        self.dados = dados
-        self.puntaje_acumulado = puntaje_acumulado
+        self.dados = dados # determinan las acciones disponibles
+        self.puntaje_acumulado = puntaje_acumulado # preg: no habria que tener en cuenta el puntaje total y el puntaje del turno??
         self.turno_terminado = turno_terminado
         
 
-    def actualizar_estado(self, *args, **kwargs) -> None:
+    def actualizar_estado(self, *args, **kwargs) -> None: 
+        # tener en cuenta: que dados me quedan despues de tirar?, que puntaje obtengo despues de tirar?, termina el turno?
         """Modifica las variables internas del estado luego de una tirada.
+    
 
         Args:
             ... (_type_): _description_
             ... (_type_): _description_
         """
-        self.dados = kwargs.get('dados', self.dados)
-        self.puntaje_acumulado = kwargs.get('puntaje_acumulado', self.puntaje_acumulado)
-        self.turno_terminado = kwargs.get('turno_terminado', self.turno_terminado)
+        
     
     def fin_turno(self):  # PREG
         """Modifica el estado al terminar el turno.
