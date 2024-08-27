@@ -80,30 +80,36 @@ class AmbienteDiezMil:
 
 
 class EstadoDiezMil:
-    def __init__(self, dados, puntaje_acumulado, turno_terminado):
+    def __init__(self, dados, puntaje_total, puntaje_turno, turno_terminado):
         """Definir qué hace a un estado de diez mil.
         Recordar que la complejidad del estado repercute en la complejidad de la tabla del agente de q-learning.
         """
         self.dados = dados # determinan las acciones disponibles
-        self.puntaje_acumulado = puntaje_acumulado # preg: no habria que tener en cuenta el puntaje total y el puntaje del turno??
+        self.puntaje_total = puntaje_total # preg: no habria que tener en cuenta el puntaje total y el puntaje del turno??
+        self.puntaje_turno = puntaje_turno
         self.turno_terminado = turno_terminado
         
 
     def actualizar_estado(self, *args, **kwargs) -> None: 
         # tener en cuenta: que dados me quedan despues de tirar?, que puntaje obtengo despues de tirar?, termina el turno?
         """Modifica las variables internas del estado luego de una tirada.
-    
-
         Args:
             ... (_type_): _description_
             ... (_type_): _description_
         """
+        self.dados = kwargs.get('dados', self.dados)
+        self.puntaje_turno = kwargs.get('puntaje_turno', self.puntaje_turno)
+        self.puntaje_total = kwargs.get('puntaje_total', self.puntaje_total)
+        self.turno_terminado = kwargs.get('turno_terminado', self.turno_terminado)
         
     
-    def fin_turno(self):  # PREG
+    def fin_turno(self):  # preguntar si la actualizacion de los puntos esta bien 
         """Modifica el estado al terminar el turno.
         """
         self.turno_terminado = True
+        self.dados = [1, 2, 3, 4, 5, 6]
+        self.puntaje_total += self.puntaje_turno
+        self.puntaje_turno = 0
 
     def __str__(self):
         """Representación en texto de EstadoDiezMil.
@@ -112,17 +118,20 @@ class EstadoDiezMil:
         Returns:
             str: Representación en texto de EstadoDiezMil.
         """
-        pass   
+        return (f"Dados: {self.dados}\n"
+                f"Puntaje Total: {self.puntaje_total}\n"
+                f"Puntaje del Turno: {self.puntaje_turno}\n"
+                f"Turno Terminado: {self.turno_terminado}")
+    
 
 class AgenteQLearning:
     def __init__(
         self,
         ambiente: AmbienteDiezMil,
+        estado: EstadoDiezMil,
         alpha: float,
         gamma: float,
         epsilon: float,
-        *args,
-        **kwargs
     ):
         """Definir las variables internas de un Agente que implementa el algoritmo de Q-Learning.
 
@@ -132,12 +141,28 @@ class AgenteQLearning:
             gamma (float): Factor de descuento.
             epsilon (float): Probabilidad de explorar.
         """
-        pass
+        self.ambiente = ambiente
+        self.estado = estado 
+        self.alpha = alpha
+        self.gamma = gamma
+        self.epsilon = epsilon
+        self.qtable = dict()  # (estado, accion) -> recompensa
 
-    def elegir_accion(self):
+
+    def elegir_accion(self):   # preg -> que pasa si la clave no esta definida? cuando se llena la tabla?
         """Selecciona una acción de acuerdo a una política ε-greedy.
         """
-        pass
+        numero_random = np.random.rand()
+
+        if numero_random < self.epsilon:  # exploracion
+           accion = min([(self.estado, JUGADA_PLANTARSE), (self.estado, JUGADA_TIRAR)], key = self.qtable.get)
+
+        else: # acción greedy (explotacion)
+            accion = max([(self.estado, JUGADA_PLANTARSE), (self.estado, JUGADA_TIRAR)], key = self.qtable.get)
+        
+        return accion 
+
+        
 
     def entrenar(self, episodios: int, verbose: bool = False) -> None:
         """Dada una cantidad de episodios, se repite el ciclo del algoritmo de Q-learning.
