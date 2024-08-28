@@ -189,7 +189,7 @@ class AgenteQLearning:
             filename (str): Nombre/Path del archivo a generar.
         """
         pass
-    
+
 
 class JugadorEntrenado(Jugador):
     def __init__(self, nombre: str, filename_politica: str):
@@ -231,3 +231,6 @@ class JugadorEntrenado(Jugador):
         #     return (JUGADA_PLANTARSE, [])
         # elif jugada==JUGADA_TIRAR:
         #     return (JUGADA_TIRAR, no_usados)
+
+
+#hola
