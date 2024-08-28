@@ -44,8 +44,9 @@ class AmbienteDiezMil:
             # self.estado.dados = [1, 2, 3, 4, 5, 6] # vuelve a tener todos los dados 
             # self.estado.puntaje_total += self.puntaje_turno # sumamos el puntaje del turno cuando decide plantarse
             # self.puntaje_turno = 0
+            self.recompensa = self.estado.puntaje_turno / 10000
             self.estado.fin_turno()
-            self.recompensa = 0  # recompensa proporcional al puntaje acumulado o 0??
+            
             
             
         elif accion == JUGADA_TIRAR:
@@ -62,7 +63,7 @@ class AmbienteDiezMil:
                 nuevo_puntaje_turno = self.estado.puntaje_turno + resultado.first
                 nuevo_puntaje_total = self.estado.puntaje_total + self.puntaje_turno
                 self.estado.actualizar_estado(puntaje_total=nuevo_puntaje_total, puntaje_turno=nuevo_puntaje_turno, dados=resultado.second, turno_terminado=False)
-                self.recompensa = puntaje_y_no_usados
+                self.recompensa = nuevo_puntaje_turno
 
                 if len(self.estado.dados) == 0:  # si usó todos los dados, puede volver a tirar todos
                     self.estado.dados = [1, 2, 3, 4, 5, 6]
@@ -76,7 +77,7 @@ class AmbienteDiezMil:
 
         if self.estado.puntaje_total >= 10000:  # condición de que ganó
             self.estado.fin_turno()
-            self.recompensa = 10000  
+            self.recompensa = 1  
 
         return (self.recompensa, self.estado.turno_terminado)
 
