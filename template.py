@@ -80,13 +80,12 @@ class AmbienteDiezMil:
 
 
 class EstadoDiezMil:
-    def __init__(self, dados, puntaje_total, puntaje_turno, turno_terminado):
+    def __init__(self, dados, puntaje_total, turno_terminado):
         """Definir qué hace a un estado de diez mil.
         Recordar que la complejidad del estado repercute en la complejidad de la tabla del agente de q-learning.
         """
         self.dados = dados # determinan las acciones disponibles
-        self.puntaje_total = puntaje_total # preg: no habria que tener en cuenta el puntaje total y el puntaje del turno??
-        self.puntaje_turno = puntaje_turno
+        self.puntaje_total = puntaje_total 
         self.turno_terminado = turno_terminado
         
 
@@ -118,10 +117,7 @@ class EstadoDiezMil:
         Returns:
             str: Representación en texto de EstadoDiezMil.
         """
-        return (f"Dados: {self.dados}\n"
-                f"Puntaje Total: {self.puntaje_total}\n"
-                f"Puntaje del Turno: {self.puntaje_turno}\n"
-                f"Turno Terminado: {self.turno_terminado}")
+        return (self.dados, self.puntaje_total) # el estado se representa como una tupla de dados y puntaje total
     
 
 class AgenteQLearning:
@@ -146,7 +142,7 @@ class AgenteQLearning:
         self.alpha = alpha
         self.gamma = gamma
         self.epsilon = epsilon
-        self.qtable = dict()  # (estado, accion) -> recompensa
+        self.qtable = dict()  # (estado, accion) -> Q(estado, accion)
 
 
     def elegir_accion(self):   # preg -> que pasa si la clave no esta definida? cuando se llena la tabla?
