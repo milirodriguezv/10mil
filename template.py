@@ -6,27 +6,25 @@ from jugador import Jugador
 
 class AmbienteDiezMil:
     
-    def __init__(self):
+    def __init__(self, estado):
         """Definir las variables de instancia de un ambiente.
         ¿Qué es propio de un ambiente de 10.000?
         """
-        self.puntaje_total = 0
-        self.puntaje_turno = 0
+        self.estado = estado 
         self.cant_turnos = 0
-        self.dados = [1, 2, 3, 4, 5, 6]  
-        self.turno_terminado = False
         self.recompensa = 0
 
 
     def reset(self):
         """Reinicia el ambiente para volver a realizar un episodio.
         """
-        self.puntaje_total = 0
-        self.puntaje_turno = 0
-        self.cant_turnos = 0
-        self.dados = [1, 2, 3, 4, 5, 6]  
-        self.turno_terminado = False
+        # self.estado.puntaje_total = 0
+        # self.puntaje_turno = 0
+        # self.estado.dados = [1, 2, 3, 4, 5, 6]  
+        # self.estado.turno_terminado = False
+        self.estado.actualizar_estado(puntaje_total=0, puntaje_turno=0, dados=[1,2,3,4,5,6], turno_terminado=False)
         self.recompensa = 0
+        self.cant_turnos = 0
 
     def step(self, accion):
         """Dada una acción devuelve una recompensa.
@@ -39,53 +37,58 @@ class AmbienteDiezMil:
         Returns:
             tuple[int, bool]: Una recompensa y un flag que indica si terminó el turno. 
         """
-        resultado = puntaje_y_no_usados(self.dados)
+        resultado = puntaje_y_no_usados(self.estado.dados)
 
         if accion == JUGADA_PLANTARSE: 
-            self.turno_terminado = True
-            self.dados = [1, 2, 3, 4, 5, 6] # vuelve a tener todos los dados 
-            self.puntaje_total += self.puntaje_turno # sumamos el puntaje del turno cuando decide plantarse
-            # self.recompensa = self.puntaje_turno / 10000  # recompensa proporcional al puntaje acumulado o 0??
-            self.puntaje_turno = 0
+            # self.estado.turno_terminado = True
+            # self.estado.dados = [1, 2, 3, 4, 5, 6] # vuelve a tener todos los dados 
+            # self.estado.puntaje_total += self.puntaje_turno # sumamos el puntaje del turno cuando decide plantarse
+            # self.puntaje_turno = 0
+            self.estado.fin_turno()
+            self.recompensa = 0  # recompensa proporcional al puntaje acumulado o 0??
+            
             
         elif accion == JUGADA_TIRAR:
             
             if resultado.first == 0: # si en esa jugada no se suma nada
-                self.puntaje_turno = 0
-                self.dados = [1, 2, 3, 4, 5, 6]
-                self.turno_terminado = True
-                # penalizacion en la recompensa??
+                # self.puntaje_turno = 0
+                # self.estado.dados = [1, 2, 3, 4, 5, 6]
+                # self.estado.turno_terminado = True
+                self.estado.fin_turno()
+                self.recompensa = -1
+              
 
             else:
-                self.puntaje_turno += resultado.first
-                self.dados = resultado.second
-                self.puntaje_acumulado += self.puntaje_turno
-                self.turno_terminado = False 
-                # recompensa por buena tirada????
+                nuevo_puntaje_turno = self.estado.puntaje_turno + resultado.first
+                nuevo_puntaje_total = self.estado.puntaje_total + self.puntaje_turno
+                self.estado.actualizar_estado(puntaje_total=nuevo_puntaje_total, puntaje_turno=nuevo_puntaje_turno, dados=resultado.second, turno_terminado=False)
+                self.recompensa = puntaje_y_no_usados
 
-                if len(self.dados) == 0:  # si usó todos los dados, puede volver a tirar todos
-                    self.dados = [1, 2, 3, 4, 5, 6]
+                if len(self.estado.dados) == 0:  # si usó todos los dados, puede volver a tirar todos
+                    self.estado.dados = [1, 2, 3, 4, 5, 6]
 
         self.cant_turnos += 1 # aumentamos la cantidad de turnos
 
-        if self.cant_turnos == 10000:
-            self.turno_terminado = True
-            # penalización en la recompensa por no haber alcanzado los 10000 puntos dentro del límite de turnos??
+        if self.cant_turnos == 1000:
+            self.estado.fin_turno()
+            self.recompensa = -1
 
-        if self.puntaje_total >= 10000:  # condición de que ganó
-            self.turno_terminado = True
-            self.recompensa = 1  # recompensa 1 o 10000?
 
-        return (self.recompensa, self.turno_terminado)
+        if self.estado.puntaje_total >= 10000:  # condición de que ganó
+            self.estado.fin_turno()
+            self.recompensa = 10000  
+
+        return (self.recompensa, self.estado.turno_terminado)
 
 
 class EstadoDiezMil:
-    def __init__(self, dados, puntaje_total, turno_terminado):
+    def __init__(self, dados, puntaje_total, puntaje_turno, turno_terminado):
         """Definir qué hace a un estado de diez mil.
         Recordar que la complejidad del estado repercute en la complejidad de la tabla del agente de q-learning.
         """
         self.dados = dados # determinan las acciones disponibles
         self.puntaje_total = puntaje_total 
+        self.puntaje_turno = puntaje_turno
         self.turno_terminado = turno_terminado
         
 
@@ -97,8 +100,8 @@ class EstadoDiezMil:
             ... (_type_): _description_
         """
         self.dados = kwargs.get('dados', self.dados)
-        self.puntaje_turno = kwargs.get('puntaje_turno', self.puntaje_turno)
         self.puntaje_total = kwargs.get('puntaje_total', self.puntaje_total)
+        self.puntaje_turno = kwargs.get('puntaje_turno', self.puntaje_turno)
         self.turno_terminado = kwargs.get('turno_terminado', self.turno_terminado)
         
     
@@ -117,7 +120,7 @@ class EstadoDiezMil:
         Returns:
             str: Representación en texto de EstadoDiezMil.
         """
-        return (self.dados, self.puntaje_total) # el estado se representa como una tupla de dados y puntaje total
+        return (self.dados, self.puntaje_turno, self.puntaje_total, self.turno_terminado) 
     
 
 class AgenteQLearning:
@@ -150,6 +153,15 @@ class AgenteQLearning:
         """
         numero_random = np.random.rand()
 
+        # inicializamos Q(estado, accion) si no existe en la tabla
+
+        if (self.estado, JUGADA_PLANTARSE) not in self.qtable:
+            self.qtable[((self.estado, JUGADA_PLANTARSE))] = 0
+        
+        if (self.estado, JUGADA_TIRAR) not in self.qtable:
+            self.qtable[((self.estado, JUGADA_TIRAR))] = 0
+        
+        # politica e-greedy
         if numero_random < self.epsilon:  # exploracion
            accion = min([(self.estado, JUGADA_PLANTARSE), (self.estado, JUGADA_TIRAR)], key = self.qtable.get)
 
@@ -177,6 +189,7 @@ class AgenteQLearning:
             filename (str): Nombre/Path del archivo a generar.
         """
         pass
+    
 
 class JugadorEntrenado(Jugador):
     def __init__(self, nombre: str, filename_politica: str):
