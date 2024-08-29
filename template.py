@@ -3,6 +3,8 @@ from utils import puntaje_y_no_usados, JUGADA_PLANTARSE, JUGADA_TIRAR, JUGADAS_S
 from collections import defaultdict
 from tqdm import tqdm
 from jugador import Jugador
+import random
+from random import randint
 
 class AmbienteDiezMil:
     
@@ -37,7 +39,15 @@ class AmbienteDiezMil:
         Returns:
             tuple[int, bool]: Una recompensa y un flag que indica si terminó el turno. 
         """
-        resultado = puntaje_y_no_usados(self.estado.dados)
+        # chequeamos que no haya llegado al tope de turnos
+        if self.cant_turnos == 1000:
+            self.estado.fin_turno()
+            self.recompensa = -1
+
+        # condición de que ganó
+        if self.estado.puntaje_total >= 10000:  
+            self.estado.fin_turno()
+            self.recompensa = 1  
 
         if accion == JUGADA_PLANTARSE: 
             # self.estado.turno_terminado = True
@@ -48,8 +58,10 @@ class AmbienteDiezMil:
             self.estado.fin_turno()
             
             
-            
         elif accion == JUGADA_TIRAR:
+
+            #self.estado.dados = [randint(1, 6) for _ in range(len(self.estado.dados))]
+            resultado = puntaje_y_no_usados(self.estado.dados)
             
             if resultado.first == 0: # si en esa jugada no se suma nada
                 # self.puntaje_turno = 0
@@ -61,7 +73,7 @@ class AmbienteDiezMil:
 
             else:
                 nuevo_puntaje_turno = self.estado.puntaje_turno + resultado.first
-                nuevo_puntaje_total = self.estado.puntaje_total + self.puntaje_turno
+                nuevo_puntaje_total = self.estado.puntaje_total + self.estado.puntaje_turno
                 self.estado.actualizar_estado(puntaje_total=nuevo_puntaje_total, puntaje_turno=nuevo_puntaje_turno, dados=resultado.second, turno_terminado=False)
                 self.recompensa = nuevo_puntaje_turno
 
@@ -70,14 +82,7 @@ class AmbienteDiezMil:
 
         self.cant_turnos += 1 # aumentamos la cantidad de turnos
 
-        if self.cant_turnos == 1000:
-            self.estado.fin_turno()
-            self.recompensa = -1
-
-
-        if self.estado.puntaje_total >= 10000:  # condición de que ganó
-            self.estado.fin_turno()
-            self.recompensa = 1  
+        
 
         return (self.recompensa, self.estado.turno_terminado)
 
@@ -87,7 +92,7 @@ class EstadoDiezMil:
         """Definir qué hace a un estado de diez mil.
         Recordar que la complejidad del estado repercute en la complejidad de la tabla del agente de q-learning.
         """
-        self.dados = dados # determinan las acciones disponibles
+        self.dados = dados 
         self.puntaje_total = puntaje_total 
         self.puntaje_turno = puntaje_turno
         self.turno_terminado = turno_terminado
@@ -121,7 +126,11 @@ class EstadoDiezMil:
         Returns:
             str: Representación en texto de EstadoDiezMil.
         """
-        return (self.dados, self.puntaje_turno, self.puntaje_total, self.turno_terminado) 
+        cant_dados = len(self.dados)
+
+        return (cant_dados, self.puntaje_total)  # representamos a cada estado como la cant de dados en ese estado y el puntaje acumulado
+                                                 # porque una decision se toma en base a la cantidad de estados disponibles para tirar y 
+                                                 # el puntaje acumulado hasta ese momento
     
 
 class AgenteQLearning:
@@ -149,7 +158,7 @@ class AgenteQLearning:
         self.qtable = dict()  # (estado, accion) -> Q(estado, accion)
 
 
-    def elegir_accion(self):   # preg -> que pasa si la clave no esta definida? cuando se llena la tabla?
+    def elegir_accion(self):   
         """Selecciona una acción de acuerdo a una política ε-greedy.
         """
         numero_random = np.random.rand()
@@ -163,12 +172,12 @@ class AgenteQLearning:
             self.qtable[((self.estado, JUGADA_TIRAR))] = 0
         
         # politica e-greedy
-        if numero_random < self.epsilon:  # exploracion
-           accion = min([(self.estado, JUGADA_PLANTARSE), (self.estado, JUGADA_TIRAR)], key = self.qtable.get)
+        if numero_random < self.epsilon: 
+           accion = random.choice([JUGADA_PLANTARSE, JUGADA_TIRAR])
 
         else: # acción greedy (explotacion)
-            accion = max([(self.estado, JUGADA_PLANTARSE), (self.estado, JUGADA_TIRAR)], key = self.qtable.get)
-        
+            _, accion = max([(self.estado, JUGADA_PLANTARSE), (self.estado, JUGADA_TIRAR)], key=self.qtable.get)
+
         return accion 
 
         
@@ -234,4 +243,4 @@ class JugadorEntrenado(Jugador):
         #     return (JUGADA_TIRAR, no_usados)
 
 
-#hola
+#holaaaa
