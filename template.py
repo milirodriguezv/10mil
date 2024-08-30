@@ -122,7 +122,7 @@ class EstadoDiezMil:
         self.puntaje_total += self.puntaje_turno
         self.puntaje_turno = 0
 
-    def __repr__(self):
+    def __str__(self):
         """Representación en texto de EstadoDiezMil.
         Ayuda a tener una versión legible del objeto.
 
@@ -130,10 +130,12 @@ class EstadoDiezMil:
             str: Representación en texto de EstadoDiezMil.
         """
         cant_dados = len(self.dados)
-
-        return (cant_dados, self.puntaje_turno)  # representamos a cada estado como la cant de dados en ese estado y el puntaje acumulado
-                                                 # porque una decision se toma en base a la cantidad de estados disponibles para tirar y 
-                                                 # el puntaje del turno (me arriesgo o no dependiendo cuantos puntos tengo hasta ahora)
+        
+        # Formatear los atributos como una cadena legible
+        return f"{cant_dados}{self.puntaje_turno}"
+                                                # representamos a cada estado como la cant de dados en ese estado y el puntaje acumulado
+                                                # porque una decision se toma en base a la cantidad de estados disponibles para tirar y 
+                                                # el puntaje del turno (me arriesgo o no dependiendo cuantos puntos tengo hasta ahora)
     
 
 class AgenteQLearning:
@@ -176,7 +178,7 @@ class AgenteQLearning:
         
         # politica e-greedy
         if numero_random < self.epsilon: 
-           accion = random.choice([JUGADA_PLANTARSE, JUGADA_TIRAR])
+            accion = random.choice([JUGADA_PLANTARSE, JUGADA_TIRAR])
 
         else: # acción greedy (explotacion)
             _, accion = max([(self.estado, JUGADA_PLANTARSE), (self.estado, JUGADA_TIRAR)], key=self.qtable.get)
@@ -198,7 +200,7 @@ class AgenteQLearning:
             self.ambiente.reset()
             
             # mientras el turno no haya terminado
-            while not self.estado.turno_terminado:
+            while not self.ambiente.turno_terminado:
                 # elegimos una acción según la política e-greedy
                 accion = self.elegir_accion()
                 
@@ -231,6 +233,7 @@ class AgenteQLearning:
                 file.write(f"{estado},{accion},{valor_q}\n")
 
 
+
 class JugadorEntrenado(Jugador):
     def __init__(self, nombre: str, filename_politica: str):
         self.nombre = nombre
@@ -248,11 +251,11 @@ class JugadorEntrenado(Jugador):
         with open(filename, 'r') as file:
             for line in file:
                 estado_str, accion_str, valor_q_str = line.strip().split(SEP)
-                estado = eval(estado_str)  # convierte el estado a tupla
+                estado = int(estado_str)  # convierte el estado a int
                 accion = int(accion_str)
                 valor_q = float(valor_q_str)
 
-                politica[(estado, accion)] = valor_q
+                politica[estado] = (valor_q, accion)
 
         return politica
 
@@ -284,8 +287,8 @@ class JugadorEntrenado(Jugador):
         puntaje_total += puntaje_turno
 
         estado = EstadoDiezMil(no_usados, puntaje_total, puntaje_turno)
-        jugada = self.politica[estado]
-       
+        valor, jugada = self.politica[estado]
+    
         if jugada==JUGADA_PLANTARSE:
             return (JUGADA_PLANTARSE, [])
         elif jugada==JUGADA_TIRAR:
