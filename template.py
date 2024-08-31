@@ -132,14 +132,6 @@ class EstadoDiezMil:
             return 9
         else:
             return 10
-    
-    def __eq__(self, other):
-        if isinstance(other, EstadoDiezMil):
-            bin1 = self.crear_bins()
-            bin2 = other.crear_bins()
-            return self.cant_dados == other.cant_dados and bin1 == bin2
-        return False
-    
 
     def __str__(self):
         """Representación en texto de EstadoDiezMil.
@@ -195,6 +187,7 @@ class AgenteQLearning:
                 qtable[estado] = {accion: 0 for accion in [JUGADA_PLANTARSE, JUGADA_TIRAR]}
         
         return qtable
+    
     
     def elegir_accion(self):   
         """Selecciona una acción de acuerdo a una política ε-greedy.
