@@ -1,6 +1,8 @@
 from random import randint
 from utils import puntaje_y_no_usados, separar, JUGADA_PLANTARSE, JUGADA_TIRAR
 from jugador import Jugador, JugadorAleatorio, JugadorSiempreSePlanta
+from template import JugadorEntrenado
+
 
 class JuegoDiezMil:
     def __init__(self, jugador: Jugador):
@@ -71,6 +73,12 @@ def main():
     juego = JuegoDiezMil(jugador)
     (cantidad_turnos, puntaje_final) = juego.jugar(verbose=True)
     print(jugador.nombre, cantidad_turnos, puntaje_final)
+
+    jugador = JugadorEntrenado("QLearning", "politica_500000.csv")
+    juego = JuegoDiezMil(jugador)
+    (cantidad_turnos, puntaje_final) = juego.jugar(verbose=True)
+    print(jugador.nombre, cantidad_turnos, puntaje_final)
+
 
 if __name__ == '__main__':
     main()
