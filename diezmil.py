@@ -74,7 +74,7 @@ def main():
     (cantidad_turnos, puntaje_final) = juego.jugar(verbose=True)
     print(jugador.nombre, cantidad_turnos, puntaje_final)
 
-    jugador = JugadorEntrenado("QLearning", "politica_500000.csv")
+    jugador = JugadorEntrenado("QLearning", "politica_100000_alpha_0.3.csv")
     juego = JuegoDiezMil(jugador)
     (cantidad_turnos, puntaje_final) = juego.jugar(verbose=True)
     print(jugador.nombre, cantidad_turnos, puntaje_final)

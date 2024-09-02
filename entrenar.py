@@ -11,14 +11,14 @@ def main(episodios, verbose):
     ambiente = AmbienteDiezMil(estado)
 
     # Crear un agente de Q-learning
-    alpha = 0.1
+    alpha = 0.3
     gamma = 0.9
     epsilon = 0.1
     agente = AgenteQLearning(ambiente, estado, alpha, gamma, epsilon)
 
     # Entrenar al agente con un número de episodios
     agente.entrenar(episodios, verbose=verbose)
-    agente.guardar_politica(f"politica_{episodios}.csv")
+    agente.guardar_politica(f"politica_{episodios}_alpha_{alpha}.csv")
 
 
 if __name__ == '__main__':
@@ -26,7 +26,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Entrenar un agente usando Q-learning en el ambiente de 'Diez Mil'.")
 
     # Agregar argumentos
-    parser.add_argument('-e', '--episodios', type=int, default=500000, help='Número de episodios para entrenar al agente (default: 10000)')
+    parser.add_argument('-e', '--episodios', type=int, default=100000, help='Número de episodios para entrenar al agente (default: 10000)')
     parser.add_argument('-v', '--verbose', action='store_true', help='Activar modo verbose para ver más detalles durante el entrenamiento')
 
     # Parsear los argumentos

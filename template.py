@@ -1,6 +1,5 @@
 import numpy as np
-from utils import puntaje_y_no_usados, JUGADA_PLANTARSE, JUGADA_TIRAR, JUGADAS_STR
-from collections import defaultdict
+from utils import puntaje_y_no_usados, JUGADA_PLANTARSE, JUGADA_TIRAR
 from tqdm import tqdm
 from jugador import Jugador
 import random
@@ -43,7 +42,7 @@ class AmbienteDiezMil:
         if accion == JUGADA_PLANTARSE: 
             self.estado.fin_turno()
             self.turno_terminado = True  
-            self.recompensa = 0
+            self.recompensa = 0  # la recompensa de plantarse es 0
             self.cant_turnos += 1
             
         elif accion == JUGADA_TIRAR:
@@ -52,7 +51,7 @@ class AmbienteDiezMil:
             puntaje, no_usados = puntaje_y_no_usados(dados)
             
             if puntaje == 0: # si en esa jugada no se suma nada
-                self.recompensa = - self.estado.puntaje_turno 
+                self.recompensa = - self.estado.puntaje_turno   # penalizacion: pierde lo que hubiese ganado si se hubiera plantado
                 self.estado.puntaje_turno = 0
                 self.estado.fin_turno()
                 self.cant_turnos += 1
@@ -66,7 +65,7 @@ class AmbienteDiezMil:
                 else:
                     self.estado.actualizar_estado(nuevo_puntaje_total, nuevo_puntaje_turno, no_usados)
 
-                self.recompensa = self.estado.puntaje_turno
+                self.recompensa = self.estado.puntaje_turno  # recompensa positiva por sumar puntos
 
 
         # chequeamos que no haya llegado al tope de turnos o que haya ganado
@@ -133,6 +132,7 @@ class EstadoDiezMil:
         else:
             return 10
 
+
     def __str__(self):
         """Representación en texto de EstadoDiezMil.
         Ayuda a tener una versión legible del objeto.
@@ -143,11 +143,11 @@ class EstadoDiezMil:
         cant_dados = self.cant_dados
         bin_puntaje = self.crear_bins()
 
-        return f"Cantidad de dados:{cant_dados}, Bin: {bin_puntaje}"
-                                                # representamos a cada estado como la cant de dados en ese estado y el puntaje acumulado
-                                                # porque una decision se toma en base a la cantidad de estados disponibles para tirar y 
-                                                # el bin del puntaje del turno (me arriesgo o no dependiendo cuantos puntos tengo hasta ahora)
+        return f"Cantidad de dados:{cant_dados}, Bin: {bin_puntaje}"  # representamos a cada estado como la cant de dados en ese estado y el puntaje acumulado (bin)
+                                                                      # porque una decision se toma en base a la cantidad de estados disponibles para tirar y 
+                                                                      # el bin del puntaje del turno (me arriesgo o no dependiendo cuantos puntos tengo hasta ahora)
     
+                                                
 
 class AgenteQLearning:
     def __init__(
@@ -276,8 +276,6 @@ class JugadorEntrenado(Jugador):
             for row in reader:
                 estado = eval(row[0])  
                 accion_optima = int(row[1])
-                
-                # Asignar la acción óptima al estado en el diccionario
                 politica[estado] = accion_optima  
     
         return politica
